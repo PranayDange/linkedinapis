@@ -24,6 +24,12 @@ public class AuthService {
     private final JwtService jwtService;
 
     public UserDto signUp(SignUpRequestDto signUpRequestDto) {
+        boolean exists = userRepository.existsByEmail(signUpRequestDto.getEmail());
+        if (exists) {
+            throw new BadRequestException("User Already exists,cannot signup again.");
+        }
+
+
         User user = modelMapper.map(signUpRequestDto, User.class);
         user.setPassword(PasswordUtils.hashPassword(signUpRequestDto.getPassword()));
 
@@ -35,7 +41,7 @@ public class AuthService {
 
     public String login(LoginRequestDto loginRequestDto) {
         User user = userRepository.findByEmail(loginRequestDto.getEmail())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: "+loginRequestDto.getEmail()));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + loginRequestDto.getEmail()));
 
         boolean isPasswordMatch = PasswordUtils.checkPassword(loginRequestDto.getPassword(), user.getPassword());
         if (!isPasswordMatch) {
